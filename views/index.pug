@@ -1,0 +1,7 @@
+extends layout
+
+block content
+  ul
+    each video in videos
+      li
+        a(href="/video/"+video.id)= video.path
