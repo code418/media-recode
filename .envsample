@@ -1,0 +1,2 @@
+SCAN_DIR=**/*.{avi,ts,wmv}
+PORT=1983

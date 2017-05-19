@@ -6,3 +6,6 @@ block content
       a(href="/") Back
     li
       a(href="/video/"+video.id)= video.path
+
+  form(action="/encode/"+video.id method="POST")
+    button(type="submit") Encode

@@ -21,48 +21,6 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
-var mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost/mediarecode');
-
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  debug('connected to db');
-});
-
-var Video = require('../models/Video');
-
-var Glob = require("glob").Glob;
-
-var crypto = require('crypto')
-var fs = require('fs');
-
-var initialScan = new Glob('~/Downloads/**/*.avi');
-
-initialScan.on('match', function(path){
-  var hash = crypto.createHash('md5');
-  var stream = fs.createReadStream(path);
-  debug('match '+ path);
-  stream.on('data', function (data) {
-      hash.update(data, 'utf8');
-  })
-
-  stream.on('end', function () {
-      var finalMd5 = hash.digest('hex');
-      debug(finalMd5);
-      Video.find({identifier:finalMd5, path:path}).then(function (videos) {
-        if(videos.length === 0){
-          var newVideo = new Video({identifier:finalMd5, path:path});
-              newVideo.save().then(function (video) {
-                debug(video);
-              });
-        }
-      });
-  })
-});
-
 /**
  * Listen on provided port, on all network interfaces.
  */

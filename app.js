@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -5,8 +6,26 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var sassMiddleware = require('node-sass-middleware');
+var debug = require('debug')('media-recode:server');
+var queue = require('queue');
+var q = queue();
+var Video = require('./models/Video')(q);
+var index = require('./routes/index')(Video);
+q.concurrency = 1;
+q.autostart = true;
+q.on('success', function(result,job){
+  debug('job start');
+});
+q.on('error', function(error,job){
+  debug('job error');
+});
+q.on('timeout', function(con,job){
+  debug('job timeout');
+});
+q.on('end', function(result,job){
+  debug('job end');
+});
 
-var index = require('./routes/index');
 
 var app = express();
 
@@ -46,6 +65,47 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render('error');
+});
+
+var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+mongoose.connect('mongodb://localhost/mediarecode');
+
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  debug('connected to db');
+});
+
+
+var Glob = require("glob").Glob;
+
+var crypto = require('crypto')
+var fs = require('fs');
+
+var initialScan = new Glob(process.env.SCAN_DIR);
+debug('scanning');
+initialScan.on('match', function(path){
+  var hash = crypto.createHash('md5');
+  var stream = fs.createReadStream(path);
+  debug('match '+ path);
+  stream.on('data', function (data) {
+      hash.update(data, 'utf8');
+  })
+
+  stream.on('end', function () {
+      var finalMd5 = hash.digest('hex');
+      debug(finalMd5);
+      Video.find({identifier:finalMd5, path:path}).then(function (videos) {
+        if(videos.length === 0){
+          var newVideo = new Video({identifier:finalMd5, path:path});
+              newVideo.save().then(function (video) {
+                debug(video);
+              });
+        }
+      });
+  })
 });
 
 module.exports = app;
