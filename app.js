@@ -87,6 +87,7 @@ var fs = require('fs');
 var initialScan = new Glob(process.env.SCAN_DIR);
 debug('scanning');
 initialScan.on('match', function(path){
+  q.push(function(cb) {
   var hash = crypto.createHash('md5');
   var stream = fs.createReadStream(path);
   debug('match '+ path);
@@ -105,7 +106,9 @@ initialScan.on('match', function(path){
               });
         }
       });
+      cb();
   })
+});
 });
 
 module.exports = app;
