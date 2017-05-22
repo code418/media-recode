@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var sassMiddleware = require('node-sass-middleware');
 var debug = require('debug')('media-recode:server');
 var queue = require('queue');
+var _ = require('lodash');
 var q = queue();
 var Video = require('./models/Video')(q);
 var index = require('./routes/index')(Video);
@@ -86,8 +87,26 @@ var fs = require('fs');
 
 var initialScan = new Glob(process.env.SCAN_DIR);
 debug('scanning');
+Video.find().sort('path').then(function (videos) {
+  _.each(videos, function(video){
+    debug(video.path);
+    if (!fs.existsSync(video.path)) {
+        video.remove();
+    }
+  })
+});
 initialScan.on('match', function(path){
   q.push(function(cb) {
+    Video.find({path:path}).then(function (videos) {
+      if(videos.length === 0){
+        var newVideo = new Video({path:path});
+            newVideo.save().then(function (video) {
+              debug(video);
+            });
+      }
+    });
+    cb();
+  /*
   var hash = crypto.createHash('md5');
   var stream = fs.createReadStream(path);
   debug('match '+ path);
@@ -108,6 +127,7 @@ initialScan.on('match', function(path){
       });
       cb();
   })
+  */
 });
 });
 

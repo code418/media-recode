@@ -1,11 +1,15 @@
 extends layout
 
 block content
-  ul
-    li
-      a(href="/") Back
-    li
-      a(href="/video/"+video.id)= video.path
-
-  form(action="/encode/"+video.id method="POST")
-    button(type="submit") Encode
+  div(class="container-fluid")
+    div(class="row")
+      nav(class="col-6 bg-faded sidebar")
+        ul(class="nav nav-pills flex-column")
+          each video in videos
+            li(class="nav-item")
+              a(class="nav-link" href="/video/"+video.id)= video.path
+      main(class="col-6")
+        p= singlevideo.path
+        p= singlevideo.progress
+        form(action="/encode/"+singlevideo.id method="POST")
+          button(type="submit") Encode

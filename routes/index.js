@@ -12,7 +12,7 @@ ffmpeg.getAvailableCodecs(function(err, codecs) {
 module.exports = function(Video){
   /* GET home page. */
   router.get('/', function(req, res, next) {
-    Video.find().sort('updatedAt').then(function (videos) {
+    Video.find().sort('path').then(function (videos) {
       res.render('index', { videos: videos });
     }).catch(function(error){
       res.send(error);
@@ -38,7 +38,9 @@ module.exports = function(Video){
         });
         video.save();
       });
-      res.render('video', { video: video });
+      Video.find().sort('path').then(function (videos) {
+        res.render('video', { videos: videos, singlevideo: video });
+      });
     }).catch(function(error){
       res.json({'status':'failure', 'err': error});
     });
@@ -47,7 +49,7 @@ module.exports = function(Video){
   router.post('/encode/:videoId', function(req, res, next) {
     Video.findById(req.params.videoId).then(function (video) {
       video.encode();
-      res.render('video', { video: video });
+      res.redirect(301, '/video/'+video.id);
     }).catch(function(error){
       res.json({'status':'failure', 'err': error});
     });

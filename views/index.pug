@@ -1,7 +1,12 @@
 extends layout
 
 block content
-  ul
-    each video in videos
-      li
-        a(href="/video/"+video.id)= video.path
+  div(class="container-fluid")
+    div(class="row")
+      nav(class="col-6 bg-faded sidebar")
+        ul(class="nav nav-pills flex-column")
+          each video in videos
+            li(class="nav-item")
+              a(class="nav-link" href="/video/"+video.id)= video.path
+      main(class="col-6")
+        div Hello
